@@ -298,7 +298,75 @@ async def chat_completions(req: ChatCompletionRequest):
     
     raise HTTPException(status_code=502, detail=f"All API keys failed. Last error: {str(last_error)}")
 
-if __name__ == "__main__":
+def get_local_ip():
+    """Get the local IP address of this machine."""
+    import socket
+    try:
+        # Create a socket to determine the local IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Connect to an external server (doesn't actually send data)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception:
+        return "localhost"
+
+def main():
+    """Main entry point for the server CLI."""
+    import argparse
     import uvicorn
-    port = int(os.getenv("PORT", 8081))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    
+    parser = argparse.ArgumentParser(description="API Farm Server")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=8081, help="Port to bind to (default: 8081)")
+    args = parser.parse_args()
+    
+    # Get local IP for display
+    local_ip = get_local_ip()
+
+    ''' 
+    print("=" * 60)
+    print("API Farm Server Starting...")
+    print("=" * 60)
+    print(f"Server running on:")
+    print(f"  - Local:   http://localhost:{args.port}")
+    print(f"  - Network: http://{local_ip}:{args.port}")
+    print()
+    print("To connect clients, set the environment variable:")
+    print(f"  export API_FARM_SERVER_URL=http://{local_ip}:{args.port}")
+    print()
+    print("Or if connecting from the same machine:")
+    print(f"  export API_FARM_SERVER_URL=http://localhost:{args.port}")
+    print("=" * 60)
+    print()'''
+    
+    # ANSI Colors
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    RESET = "\033[0m"
+
+    print(f"{CYAN}{'=' * 60}{RESET}")
+    print(f"{GREEN}API Farm Server Starting...{RESET}")
+    print(f"{CYAN}{'=' * 60}{RESET}")
+
+    print(f"{YELLOW}Server running on:{RESET}")
+    print(f"  - Local:   {BLUE}http://localhost:{args.port}{RESET}")
+    print(f"  - Network: {BLUE}http://{local_ip}:{args.port}{RESET}")
+    print()
+
+    print(f"{YELLOW}To connect clients, set the environment variable:{RESET}")
+    print(f"  export API_FARM_SERVER_URL={GREEN}http://{local_ip}:{args.port}{RESET}")
+    print()
+
+    print(f"{YELLOW}Or if connecting from the same machine:{RESET}")
+    print(f"  export API_FARM_SERVER_URL={GREEN}http://localhost:{args.port}{RESET}")
+    print(f"{CYAN}{'=' * 60}{RESET}\n")
+
+    uvicorn.run(app, host=args.host, port=args.port)
+
+if __name__ == "__main__":
+    main()

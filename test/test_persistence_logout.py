@@ -4,7 +4,7 @@ import sys
 import os
 import json
 import requests
-from client_sdk import APIPoolClient
+from api_farm.client_sdk import APIPoolClient
 
 SERVER_URL = "http://localhost:8082"
 

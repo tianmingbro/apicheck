@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "api_farm"
+version = "0.1.0"
+description = "A shared API key pool server and client for managing and using API keys"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "API Farm Team"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "nest_asyncio",
+    "fastapi",
+    "httpx",
+    "uvicorn",
+    "openai",
+]
+
+[project.scripts]
+api-farm = "api_farm.cli:main"
+api-farm-server = "api_farm.server:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/api_farm"
+
+[tool.setuptools]
+packages = ["api_farm"]

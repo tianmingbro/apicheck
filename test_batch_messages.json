@@ -1,0 +1,12 @@
+[
+  [
+    {"role": "user", "content": "What is 2+2?"}
+  ],
+  [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Tell me a short joke about programming."}
+  ],
+  [
+    {"role": "user", "content": "What is the capital of France?"}
+  ]
+]
