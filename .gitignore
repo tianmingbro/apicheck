@@ -4,3 +4,4 @@
 **test_messages.json
 **.egg-info
 **__pycache__
+**.pytest_cache
