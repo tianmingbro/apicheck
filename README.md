@@ -131,6 +131,9 @@ token = client.login('username', 'password')
 # Add API key
 client.add_key('your-api-key', base_url='https://integrate.api.nvidia.com/v1')
 
+# Import keys from file
+client.add_keys_from_file("api.json")
+
 # List keys
 keys = client.list_keys()
 print(keys)
