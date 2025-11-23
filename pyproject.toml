@@ -26,6 +26,8 @@ dependencies = [
     "httpx",
     "uvicorn",
     "openai",
+    "pytest-asyncio"
+    "tqdm"
 ]
 
 [project.scripts]
@@ -33,7 +35,7 @@ api-farm = "api_farm.cli:main"
 api-farm-server = "api_farm.server:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/api_farm"
+Homepage = "https://github.com/zhusq20/APIFarm.git"
 
 [tool.setuptools]
 packages = ["api_farm"]

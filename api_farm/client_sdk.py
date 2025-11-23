@@ -1,10 +1,13 @@
+from typing import List, Dict, Any, Optional, Union
 import httpx
 import os
-import json
-from typing import List, Dict, Any, Optional
+from tqdm.asyncio import tqdm_asyncio
+
+# Sentinel to indicate that the timeout should be taken from the client default
+USE_CLIENT_DEFAULT = object()
 
 class APIPoolClient:
-    def __init__(self, server_url: Optional[str] = None, token: Optional[str] = None):
+    def __init__(self, server_url: Optional[str] = None, token: Optional[str] = None, timeout: float = 600000.0):
         # Try to get server URL from environment variable if not provided
         if server_url is None:
             server_url = os.getenv('API_FARM_SERVER_URL')
@@ -18,6 +21,7 @@ class APIPoolClient:
         
         self.server_url = server_url
         self.token = token
+        self.timeout = timeout
         self.user_id: Optional[str] = None
 
     def register(self, username, password) -> str:
@@ -135,7 +139,8 @@ class APIPoolClient:
         temperature: float = 1.0,
         top_p: float = 0.95,
         max_tokens: int = 1024,
-        stream: bool = False
+        stream: bool = False,
+        timeout: Union[float, None, object] = USE_CLIENT_DEFAULT
     ) -> Any:
         """
         Request a single chat completion.
@@ -153,8 +158,9 @@ class APIPoolClient:
         """
         import asyncio
         
-        async with httpx.AsyncClient(base_url=self.server_url, timeout=60.0) as client:
-            resp = await client.post("/chat/completions", json={
+        request_timeout = self.timeout if timeout is USE_CLIENT_DEFAULT else timeout
+        async with httpx.AsyncClient(base_url=self.server_url, timeout=request_timeout) as client:
+            resp = await client.post("/chat/completions" + f"?timeout={timeout}", json={
                 "model": model,
                 "messages": messages,
                 "temperature": temperature,
@@ -173,7 +179,8 @@ class APIPoolClient:
         top_p: float = 0.95,
         max_tokens: int = 1024,
         stream: bool = False,
-        concurrency: int = 8
+        concurrency: int = 8,
+        timeout: Union[float, None, object] = USE_CLIENT_DEFAULT
     ) -> List[Any]:
         """
         Request multiple chat completions from the shared pool in batch.
@@ -199,8 +206,9 @@ class APIPoolClient:
         
         async def _process_one(idx: int, messages: List[Dict[str, Any]]) -> None:
             async with sem:
-                async with httpx.AsyncClient(base_url=self.server_url, timeout=60.0) as client:
-                    resp = await client.post("/chat/completions", json={
+                request_timeout = self.timeout if timeout is USE_CLIENT_DEFAULT else timeout
+                async with httpx.AsyncClient(base_url=self.server_url, timeout=request_timeout) as client:
+                    resp = await client.post("/chat/completions"+f"?timeout={timeout}", json={
                         "model": model,
                         "messages": messages,
                         "temperature": temperature,
@@ -215,6 +223,7 @@ class APIPoolClient:
             asyncio.create_task(_process_one(i, msgs)) 
             for i, msgs in enumerate(batch_messages)
         ]
-        await asyncio.gather(*tasks)
+        
+        await tqdm_asyncio.gather(*tasks)
         
         return results

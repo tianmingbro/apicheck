@@ -7,12 +7,14 @@ Demonstrates both CLI and programmatic usage of async batch processing.
 import asyncio
 import json
 from api_farm.client_sdk import APIPoolClient
+import pytest
 
+@pytest.mark.asyncio
 async def test_batch_chat():
     """Test batch chat completions programmatically."""
     
     # Initialize client
-    client = APIPoolClient()
+    client = APIPoolClient(server_url="http://localhost:8081")
     
     # Prepare batch messages
     batch_messages = [
@@ -35,7 +37,8 @@ async def test_batch_chat():
         temperature=1.0,
         top_p=0.95,
         max_tokens=1024,
-        concurrency=8
+        concurrency=8,
+        timeout=60000
     )
     
     # Display results

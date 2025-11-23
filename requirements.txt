@@ -1,5 +1,0 @@
-nest_asyncio
-fastapi
-httpx
-uvicorn
-openai

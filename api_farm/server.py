@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from openai import AsyncOpenAI
 import itertools
 import random
+import time
 
 # --- Data Models ---
 
@@ -270,32 +271,41 @@ async def remove_key(req: RemoveKeyRequest, user_id: str = Depends(get_current_u
         raise HTTPException(status_code=404, detail=str(e))
 
 @app.post("/chat/completions")
-async def chat_completions(req: ChatCompletionRequest):
+async def chat_completions(req: ChatCompletionRequest, timeout: int = 60000):
     """
     Public endpoint. Uses shared pool.
     """
+
     clients = await pool.get_all_clients_snapshot()
     if not clients:
         raise HTTPException(status_code=503, detail="No API keys available in the pool")
 
     last_error = None
-    
-    for client in clients:
-        try:
-            response = await client.chat.completions.create(
-                model=req.model,
-                messages=req.messages,
-                temperature=req.temperature,
-                top_p=req.top_p,
-                max_tokens=req.max_tokens,
-                stream=req.stream
-            )
-            return response
-        except Exception as e:
-            last_error = e
-            print(f"Client failed: {e}. Retrying with next key...")
-            continue
-    
+
+    start_time = time.time()
+    not_timeout = True
+    while not_timeout:
+
+        # 如果总时间超过限制，认为超时
+        if time.time() - start_time > timeout:
+            print("Global timeout reached.")
+            break
+        
+        for client in clients:
+            try:
+                response = await client.chat.completions.create(
+                    model=req.model,
+                    messages=req.messages,
+                    temperature=req.temperature,
+                    top_p=req.top_p,
+                    max_tokens=req.max_tokens,
+                    stream=req.stream
+                )
+                return response
+            except Exception as e:
+                last_error = e
+                print(f"Client failed: {e}. Retrying with next key...")
+        
     raise HTTPException(status_code=502, detail=f"All API keys failed. Last error: {str(last_error)}")
 
 def get_local_ip():

@@ -73,6 +73,8 @@ api-farm login myuser mypassword
 
 # Add an API key
 api-farm add-key "your-api-key-here"
+# Import keys from a file
+api-farm add-key --file api.json
 
 # List your keys
 api-farm list-keys
