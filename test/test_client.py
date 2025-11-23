@@ -25,7 +25,7 @@ def test():
 
     # 3. Add Key
     print("Adding Key...")
-    client.add_key("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")
+    client.add_key(None)
 
     # 4. Call LLM Generation (Inference)
     # This uses the shared pool of keys.
@@ -53,7 +53,7 @@ def test():
 
     # 4. Remove Key
     print("Removing Key...")
-    print(client.remove_key("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"))
+    print(client.remove_key(None))
 
     # 5. Logout
     print("Logging out...")
