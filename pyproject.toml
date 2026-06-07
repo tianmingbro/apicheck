@@ -3,39 +3,65 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "api_farm"
+name = "keypilot"
 version = "0.1.0"
-description = "A shared API key pool server and client for managing and using API keys"
+description = "Shared API key pool with load balancing, quota management, and CLI/SDK"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
-    {name = "API Farm Team"}
+    {name = "KEYPILOT Team"}
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "nest_asyncio",
-    "fastapi",
-    "httpx",
-    "uvicorn",
-    "openai",
-    "pytest-asyncio"
-    "tqdm"
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "httpx>=0.24.0",
+    "python-jose[cryptography]>=3.3.0",
+    "python-multipart>=0.0.6",
+    "databases[postgresql]>=0.7.0",
+    "asyncpg>=0.28.0",
+    "redis>=5.0.0",
+    "alembic>=1.12.0",
+    "pydantic-settings>=2.0.0",
+    "nest_asyncio>=1.5.0",
+    "tqdm>=4.65.0",
+    "openai>=1.0.0",           # 可选，仅用于客户端示例
+    "pytest-asyncio>=0.21.0",  # 开发依赖，可移到[project.optional-dependencies]
 ]
 
 [project.scripts]
-api-farm = "api_farm.cli:main"
-api-farm-server = "api_farm.server:main"
+keypilot = "legacy.cli:main"
+# 启动新服务端
+keypilot-server = "app.main:start"   # 需要你在 app/main.py 中定义 start() 函数
+# 可选：兼容旧服务端命令
+api-farm-server = "app.main:start"
 
 [project.urls]
-Homepage = "https://github.com/zhusq20/APIFarm.git"
+Homepage = "https://github.com/yourusername/keypilot"
 
 [tool.setuptools]
-packages = ["api_farm"]
+# 需要显式列出需要打包的包（包括 legacy 和 app）
+packages = ["legacy", "app", "app.api", "app.api.routes", "app.core", "app.models", "app.schemas", "app.services", "app.db", "app.utils"]
+
+[tool.setuptools.package-data]
+legacy = ["py.typed"]   # 如果需要
+app = ["py.typed"]
+
+# 可选：开发依赖分组
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "black>=23.0",
+    "isort>=5.12",
+    "mypy>=1.0",
+]
+
+[tool.poetry.scripts]
+api-farm = "legacy.cli:main"

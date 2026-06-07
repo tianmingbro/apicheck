@@ -5,3 +5,8 @@
 **.egg-info
 **__pycache__
 **.pytest_cache
+
+# 虚拟环境
+venv/
+.venv/
+env/
