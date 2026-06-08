@@ -18,10 +18,16 @@ class APIPoolClient:
         self.token = token
         self.timeout = timeout
 
+    # def _get_headers(self) -> Dict[str, str]:
+    #     headers = {"Content-Type": "application/json"}
+    #     if not self.token:
+    #         raise RuntimeError("Not authenticated. Call login() first.")
+    #     return {"Authorization": f"Bearer {self.token}"}
     def _get_headers(self) -> Dict[str, str]:
-        if not self.token:
-            raise RuntimeError("Not authenticated. Call login() first.")
-        return {"Authorization": f"Bearer {self.token}"}
+        headers = {"Content-Type": "application/json"}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        return headers
 
     def register(self, username: str, password: str) -> Dict[str, Any]:
         """Register a new user. Returns user info."""
@@ -46,6 +52,9 @@ class APIPoolClient:
 
     def add_key(self, api_key: str, base_url: str = "https://integrate.api.nvidia.com/v1") -> Dict[str, Any]:
         """Add an API key. Returns created key info."""
+        if not api_key:
+            raise ValueError("API key cannot be empty or None")
+        print('(self._get_headers())'+str(self._get_headers()))
         with httpx.Client(base_url=self.server_url, timeout=self.timeout) as client:
             resp = client.post("/keys", json={"key_value": api_key, "base_url": base_url},
                                headers=self._get_headers())
@@ -65,6 +74,8 @@ class APIPoolClient:
 
     def list_keys(self) -> List[Dict[str, Any]]:
         """List user's API keys (decrypted & masked)."""
+        print('(self._get_headers())'+str(self._get_headers()))
+
         with httpx.Client(base_url=self.server_url, timeout=self.timeout) as client:
             resp = client.get("/keys", headers=self._get_headers())
             resp.raise_for_status()
@@ -72,6 +83,7 @@ class APIPoolClient:
 
     def remove_key(self, key_id: int) -> None:
         """Remove an API key by its ID."""
+        print('(self._get_headers())'+str(self._get_headers()))
         with httpx.Client(base_url=self.server_url, timeout=self.timeout) as client:
             resp = client.delete(f"/keys/{key_id}", headers=self._get_headers())
             resp.raise_for_status()
@@ -89,6 +101,7 @@ class APIPoolClient:
         """Send a single chat completion request."""
         timeout = timeout or self.timeout
         async with httpx.AsyncClient(base_url=self.server_url, timeout=timeout) as client:
+            print(f"Request URL: {self.server_url}/chat/completions")
             resp = await client.post(
                 "/chat/completions",
                 json={
@@ -101,6 +114,7 @@ class APIPoolClient:
                 },
                 headers=self._get_headers()
             )
+
             resp.raise_for_status()
             return resp.json()
 

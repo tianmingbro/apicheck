@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from typing import List
 from datetime import datetime
-
+from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
@@ -20,21 +20,13 @@ def mask_api_key(key_value: str) -> str:
         return "*" * len(key_value)
     return key_value[:4] + "*" * (len(key_value) - 8) + key_value[-4:]
 
-@router.get("", response_model=List[APIKeyResponse])
-async def list_keys(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """获取当前用户的所有 API Key（自动解密并脱敏）"""
-    result = await db.execute(
-        select(APIKey).where(APIKey.user_id == current_user.id)
-    )
-    keys = result.scalars().all()
-    
-    response = []
+@router.get("/", response_model=List[APIKeyResponse])
+def list_keys(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    keys = db.query(APIKey).filter(APIKey.user_id == current_user.id).all()
+    result = []
     for key in keys:
         decrypted = decrypt_api_key(key.key_value)
-        response.append(APIKeyResponse(
+        result.append(APIKeyResponse(
             id=key.id,
             key=mask_api_key(decrypted),
             base_url=key.base_url,
@@ -43,7 +35,7 @@ async def list_keys(
             total_calls=key.total_calls,
             last_used_at=key.last_used_at
         ))
-    return response
+    return result
 
 @router.post("", response_model=APIKeyResponse, status_code=status.HTTP_201_CREATED)
 async def add_key(

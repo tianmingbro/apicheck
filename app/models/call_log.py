@@ -1,20 +1,22 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger
+# app/models/call_log.py
+from sqlalchemy import String, Integer, ForeignKey, DateTime, Text
+from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from app.db.base import Base
 
 class CallLog(Base):
     __tablename__ = "call_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    request_id = Column(String(36), unique=True, nullable=False)
-    user_id = Column(Integer, index=True, nullable=False)
-    api_key_id = Column(Integer, index=True, nullable=False)
-    model = Column(String(100), nullable=False)
-    input_tokens = Column(Integer, default=0)
-    output_tokens = Column(Integer, default=0)
-    total_tokens = Column(Integer, default=0)
-    cost_cents = Column(Integer, nullable=False)
-    status_code = Column(Integer, index=True)
-    duration_ms = Column(Integer)
-    error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    request_id: Mapped[str] = mapped_column(String(36), unique=True, index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    api_key_id: Mapped[int] = mapped_column(Integer, ForeignKey("api_keys.id"), nullable=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    cost_cents: Mapped[int] = mapped_column(Integer, default=0)
+    status_code: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    duration_ms: Mapped[int] = mapped_column(Integer, default=0)
+    error_message: Mapped[str] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
