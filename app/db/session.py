@@ -1,24 +1,24 @@
-# app/db/session.py
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from typing import Generator
 from app.core.config import settings
 
-engine = create_async_engine(
+engine = create_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,          # 开发时输出 SQL
+    echo=settings.DEBUG,
     future=True,
 )
 
-# 创建异步会话工厂
-AsyncSessionLocal = async_sessionmaker(
-    engine,
+SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    expire_on_commit=False,
-    class_=AsyncSession,
+    bind=engine,
+    future=True,
 )
 
-async def get_db() -> AsyncSession:
-    """依赖注入：获取异步数据库会话"""
-    async with AsyncSessionLocal() as session:
-        yield session
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
