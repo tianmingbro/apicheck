@@ -13,7 +13,16 @@ from app.core.quota import check_and_deduct_quota
 from app.utils.encryption import decrypt_api_key
 
 # 全局 HTTP 客户端
-client = httpx.AsyncClient(timeout=120.0)
+# client = httpx.AsyncClient(timeout=120.0)
+# 全局 HTTP 客户端（可替换）
+_default_client = httpx.AsyncClient(timeout=120.0)
+
+def _get_client():
+    return _default_client
+
+def _set_client(client):
+    global _default_client
+    _default_client = client
 
 async def log_call(db: Session, request_id: str, user_id: int, api_key_id: int,
                    model: str, input_tokens: int, output_tokens: int, total_tokens: int,
@@ -63,7 +72,7 @@ class ChatService:
         url = f"{upstream_url}/chat/completions"
 
         try:
-            response = await client.post(url, json=request_data, headers=headers)
+            response = await _get_client().post(url, json=request_data, headers=headers)
             duration_ms = int((time.time() - start_time) * 1000)
             response_data = response.json()
             response.raise_for_status()

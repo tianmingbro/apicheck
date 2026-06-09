@@ -33,6 +33,13 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+def include_object(object, name, type_, reflected, compare_to):
+    # 忽略不属于当前业务模型的表
+    if type_ == "table" and name in ("plans", "users", "spatial_ref_sys"):
+        return False
+    # 其他所有对象（列、索引、外键等）继续检测
+    return True
+
 def run_migrations_online() -> None:
     """在线模式运行迁移（连接数据库）"""
     # 从 Alembic 配置中获取数据库 URL（我们动态覆盖）
@@ -48,7 +55,8 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=target_metadata
+            target_metadata=target_metadata,
+            include_object=include_object,   # <-- 添加这行
         )
         with context.begin_transaction():
             context.run_migrations()

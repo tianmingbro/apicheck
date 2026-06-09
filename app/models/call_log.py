@@ -3,6 +3,7 @@ from sqlalchemy import String, Integer, ForeignKey, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from app.db.base import Base
+from sqlalchemy import Index
 
 class CallLog(Base):
     __tablename__ = "call_logs"
@@ -20,3 +21,11 @@ class CallLog(Base):
     duration_ms: Mapped[int] = mapped_column(Integer, default=0)
     error_message: Mapped[str] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+    __table_args__ = (
+        Index('idx_call_logs_user_id', 'user_id'),
+        Index('idx_call_logs_created_at', 'created_at'),
+        Index('idx_call_logs_status_code', 'status_code'),
+        Index('idx_call_logs_model', 'model'),
+        Index('idx_call_logs_user_created', 'user_id', 'created_at'),
+    )

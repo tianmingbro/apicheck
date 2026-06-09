@@ -19,5 +19,7 @@ class LoadBalancer:
             selected = keys[idx]
             self._index += 1
             return selected
+        elif self.strategy == "least_used":
+            return min(keys, key=lambda k: k.total_calls)
         # 其他策略可扩展
         return keys[0]
