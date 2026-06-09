@@ -3,6 +3,11 @@ from sqlalchemy import String, Integer, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from app.db.base import Base
+import enum
+
+class UserRole(str, enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 class User(Base):
     __tablename__ = "users"
@@ -25,3 +30,5 @@ class User(Base):
 
     # 关系（如果有 APIKey 模型）
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
+
+    orders = relationship("Order", back_populates="user")

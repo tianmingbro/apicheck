@@ -8,9 +8,7 @@ version = "0.1.0"
 description = "Shared API key pool with load balancing, quota management, and CLI/SDK"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [
-    {name = "KEYPILOT Team"}
-]
+authors = [{name = "KEYPILOT Team"}]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -31,29 +29,35 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "nest_asyncio>=1.5.0",
     "tqdm>=4.65.0",
-    "openai>=1.0.0",           # 可选，仅用于客户端示例
-    "pytest-asyncio>=0.21.0",  # 开发依赖，可移到[project.optional-dependencies]
+    "openai>=1.0.0",
+    "pytest-asyncio>=0.21.0",
 ]
 
 [project.scripts]
 keypilot = "legacy.cli:main"
-# 启动新服务端
-keypilot-server = "app.main:start"   # 需要你在 app/main.py 中定义 start() 函数
-# 可选：兼容旧服务端命令
-api-farm-server = "app.main:start"
+keypilot-server = "app.main:start"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/keypilot"
 
 [tool.setuptools]
-# 需要显式列出需要打包的包（包括 legacy 和 app）
-packages = ["legacy", "app", "app.api", "app.api.routes", "app.core", "app.models", "app.schemas", "app.services", "app.db", "app.utils"]
+packages = [
+    "legacy",
+    "app",
+    "app.api",
+    "app.api.routes",
+    "app.core",
+    "app.models",
+    "app.schemas",
+    "app.services",
+    "app.db",
+    "app.utils",
+]
 
 [tool.setuptools.package-data]
-legacy = ["py.typed"]   # 如果需要
+legacy = ["py.typed"]
 app = ["py.typed"]
 
-# 可选：开发依赖分组
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
@@ -62,9 +66,6 @@ dev = [
     "isort>=5.12",
     "mypy>=1.0",
 ]
-
-[tool.poetry.scripts]
-api-farm = "legacy.cli:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

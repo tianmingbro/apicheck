@@ -26,42 +26,54 @@ def remove_token():
     if os.path.exists(TOKEN_FILE):
         os.remove(TOKEN_FILE)
 
+def get_server_url(args):
+    """优先级：命令行 --server-url > 环境变量 API_FARM_SERVER_URL > 默认值"""
+    if hasattr(args, 'server_url') and args.server_url:
+        return args.server_url
+    env_url = os.environ.get("API_FARM_SERVER_URL")
+    if env_url:
+        return env_url
+    return SERVER_URL
+
 def main():
     # 环境变量检查（可选，因为有默认值）
     if not os.getenv('KEYPILOT_SERVER_URL'):
         print("Warning: KEYPILOT_SERVER_URL not set, using default http://localhost:8000")
 
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('--server-url', help='Override server URL (env: KEYPILOT_SERVER_URL)')
+
     parser = argparse.ArgumentParser(description="KeyPilot CLI - API Key Pool Manager")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # --- register ---
-    p = subparsers.add_parser("register", help="Register a new user")
+    p = subparsers.add_parser("register", parents=[parent_parser], help="Register a new user")
     p.add_argument("username")
     p.add_argument("password")
 
     # --- login ---
-    p = subparsers.add_parser("login", help="Login and save token")
+    p = subparsers.add_parser("login", parents=[parent_parser], help="Login and save token")
     p.add_argument("username")
     p.add_argument("password")
 
     # --- logout ---
-    subparsers.add_parser("logout", help="Logout (remove local token)")
+    subparsers.add_parser("logout", parents=[parent_parser], help="Logout (remove local token)")
 
     # --- add-key ---
-    p = subparsers.add_parser("add-key", help="Add an API key")
+    p = subparsers.add_parser("add-key", parents=[parent_parser], help="Add an API key")
     p.add_argument("key", nargs="?", help="API key value")
     p.add_argument("--base-url", default="https://integrate.api.nvidia.com/v1")
     p.add_argument("--file", "-f", help="Import keys from JSON file (requires 'api_keys' array)")
 
     # --- list-keys ---
-    subparsers.add_parser("list-keys", help="List all API keys (masked)")
+    subparsers.add_parser("list-keys", parents=[parent_parser], help="List all API keys (masked)")
 
     # --- remove-key ---
-    p = subparsers.add_parser("remove-key", help="Remove an API key by its ID")
+    p = subparsers.add_parser("remove-key", parents=[parent_parser], help="Remove an API key by its ID")
     p.add_argument("key_id", type=int, help="ID of the key to remove")
 
     # --- chat ---
-    p = subparsers.add_parser("chat", help="Send a chat completion")
+    p = subparsers.add_parser("chat", parents=[parent_parser], help="Send a chat completion")
     p.add_argument("message", nargs="?", help="User message")
     p.add_argument("--file", "-f", help="JSON file with messages array")
     p.add_argument("--model", "-m", default="meta/llama-3.1-8b-instruct")
@@ -71,7 +83,7 @@ def main():
     p.add_argument("--system", help="System message")
 
     # --- batch-chat ---
-    p = subparsers.add_parser("batch-chat", help="Batch chat from JSON file")
+    p = subparsers.add_parser("batch-chat", parents=[parent_parser], help="Batch chat from JSON file")
     p.add_argument("--file", "-f", required=True, help="JSON file containing array of message arrays")
     p.add_argument("--model", "-m", default="meta/llama-3.1-8b-instruct")
     p.add_argument("--temperature", "-t", type=float, default=1.0)
@@ -81,9 +93,9 @@ def main():
     p.add_argument("--output", "-o", choices=["json", "text"], default="text")
 
     args = parser.parse_args()
-
+    server_url = get_server_url(args)
     token = load_token()
-    client = APIPoolClient(server_url=SERVER_URL, token=token)
+    client = APIPoolClient(server_url=server_url, token=token)
 
     try:
         if args.command == "register":

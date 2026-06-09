@@ -1,0 +1,77 @@
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: keypilot_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-api_farm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-api_farm}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # 可选，宿主机调试用
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api_farm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api_farm_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: keypilot_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"   # 可选，宿主机调试用
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api_farm_net
+
+  app:
+    build: .
+    container_name: keypilot_app
+    ports:
+      - "8080:8000"   # 宿主机 8080 -> 容器 8000
+    environment:
+      # 应用配置
+      DATABASE_URL: postgresql://${POSTGRES_USER:-api_farm}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-api_farm}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change_this_in_production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change_this_in_production}
+      DEBUG: "false"
+      APP_NAME: "API Farm Commercial"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./legacy:/app/legacy   # 挂载 CLI/SDK 代码（可选，便于开发）
+    networks:
+      - api_farm_net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  api_farm_net:
+    driver: bridge
+
+frontend:
+  build: ./frontend
+  ports:
+    - "5173:5173"
+  environment:
+    - VITE_API_BASE_URL=http://app:8000
+  depends_on:
+    - app
