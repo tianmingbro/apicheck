@@ -19,7 +19,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "6.0",
+    "types": ["vite/client"]   // 👈 添加这一行
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
