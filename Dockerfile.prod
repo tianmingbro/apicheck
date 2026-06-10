@@ -23,6 +23,10 @@ COPY requirements.txt .
 # 安装 Python 依赖
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 复制整个项目并安装本地包
+COPY . /app
+RUN pip install --no-cache-dir -e .
+
 # 运行时阶段
 FROM python:3.10-slim
 
