@@ -15,7 +15,8 @@ from fastapi.responses import PlainTextResponse
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/orders", tags=["orders"])
+orders_router = APIRouter(prefix="/orders", tags=["orders"])
+plans_router = APIRouter(prefix="/plans", tags=["plans"])
 
 
 def generate_trade_no() -> str:
@@ -46,7 +47,7 @@ def upgrade_user_plan(db: Session, user_id: int, plan_id: int):
     logger.info(f"User {user_id} upgraded to plan {plan.name}, added {plan.quota} quota")
 
 
-@router.post("/create", response_model=dict, status_code=status.HTTP_201_CREATED)
+@orders_router.post("/create", response_model=dict, status_code=status.HTTP_201_CREATED)
 def create_order(
     plan_id: int,
     db: Session = Depends(get_db),
@@ -99,7 +100,7 @@ def create_order(
     }
 
 
-@router.post("/alipay/notify", response_class=PlainTextResponse)
+@orders_router.post("/alipay/notify", response_class=PlainTextResponse)
 async def alipay_notify(
     request: Request,
     db: Session = Depends(get_db),
@@ -167,3 +168,85 @@ async def alipay_notify(
 
     # 支付宝要求：收到通知后必须返回字符串 "success"
     return PlainTextResponse("success")
+
+
+def _format_features(features) -> list[str]:
+    """Convert Plan.features (JSON dict) to a list of human-readable strings."""
+    if isinstance(features, dict):
+        label_map = {
+            "rate_limit": "速率限制",
+            "support": "技术支持",
+            "analytics": "数据分析",
+            "sla": "SLA 保障",
+        }
+        return [
+            f"{label_map.get(k, k)}: {v}" if not isinstance(v, bool) else label_map.get(k, k)
+            for k, v in features.items()
+        ]
+    if isinstance(features, list):
+        return [str(f) for f in features]
+    return []
+
+
+# ── Public Plans endpoints ──────────────────────────────────
+
+@plans_router.get("", response_model=list[dict])
+def list_plans(db: Session = Depends(get_db)):
+    """List all active plans — public, requires user auth."""
+    plans = db.query(Plan).filter(Plan.is_active == True).all()
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "code": p.code,
+            "price_cents": p.price_cents,
+            "currency": p.currency,
+            "quota": p.quota,
+            "quota_unit": p.quota_unit,
+            "is_active": p.is_active,
+            "features": _format_features(p.features),
+        }
+        for p in plans
+    ]
+
+
+@plans_router.get("/current")
+def get_current_plan(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get the current user's plan info."""
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    plan = db.query(Plan).filter(Plan.code == user.plan).first()
+    if not plan:
+        # Fall back to free plan
+        plan = db.query(Plan).filter(Plan.code == "free").first()
+
+    if not plan:
+        return {
+            "plan_code": user.plan,
+            "quota_limit": user.quota_limit,
+            "quota_used": user.quota_used,
+            "extra_tokens": user.extra_tokens,
+            "remaining": (user.quota_limit - user.quota_used) + user.extra_tokens,
+        }
+
+    return {
+        "id": plan.id,
+        "name": plan.name,
+        "code": plan.code,
+        "price_cents": plan.price_cents,
+        "currency": plan.currency,
+        "quota": plan.quota,
+        "quota_unit": plan.quota_unit,
+        "is_active": plan.is_active,
+        "features": _format_features(plan.features),
+        "plan_code": user.plan,
+        "quota_limit": user.quota_limit,
+        "quota_used": user.quota_used,
+        "extra_tokens": user.extra_tokens,
+        "remaining": (user.quota_limit - user.quota_used) + user.extra_tokens,
+    }

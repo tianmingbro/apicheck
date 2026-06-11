@@ -20,7 +20,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <span className="text-lg font-semibold lg:hidden">API Farm</span>
+        <span className="text-lg font-semibold lg:hidden">KEYPILOT</span>
       </div>
 
       {/* 右侧：用户信息 */}

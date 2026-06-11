@@ -15,6 +15,10 @@ RATE_LIMIT_CONFIG = {
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        # Skip if rate limiting is disabled
+        if not getattr(settings, "RATE_LIMIT_ENABLED", True):
+            return await call_next(request)
+
         # 根据请求路径匹配限流配置（前缀匹配）
         path = request.url.path
         config = None

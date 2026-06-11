@@ -1,22 +1,48 @@
 // src/pages/billing/PlansPage.tsx
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { billingApi, type Plan } from '@/services/modules/billingApi';
 import PlanCard from '@/components/billing/PlanCard';
-
-// 模拟当前套餐 ID（实际应从 store 或 API 获取）
-const CURRENT_PLAN_ID = 1; // 假设免费套餐 ID 为 1
+import apiClient from '@/services/apiClient';
+import { useNavigate } from 'react-router-dom';
 
 export default function PlansPage() {
-  // 获取套餐列表
+  const navigate = useNavigate();
+
+  // Fetch plans list
   const { data: plansData, isLoading, error } = useQuery({
     queryKey: ['plans'],
-    queryFn: billingApi.getPlans,
+    queryFn: () => billingApi.getPlans().then((r) => r.data),
   });
 
-  // 预留升级回调（暂只 console，后续可集成支付）
+  // Fetch current plan
+  const { data: currentPlan } = useQuery({
+    queryKey: ['current-plan'],
+    queryFn: () => billingApi.getCurrentPlan().then((r) => r.data),
+    retry: false,
+  });
+
+  const currentPlanId = currentPlan?.id || null;
+
+  const upgradeMutation = useMutation({
+    mutationFn: (planId: number) =>
+      apiClient.post('/api/orders/create', null, { params: { plan_id: planId } }),
+    onSuccess: (res) => {
+      const payUrl = res.data?.pay_url;
+      if (payUrl) {
+        window.open(payUrl, '_blank');
+      } else {
+        alert('创建订单成功，请在我的订单中查看');
+      }
+      navigate('/billing');
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.detail || '创建订单失败，请稍后再试');
+    },
+  });
+
   const handleUpgrade = (planId: number) => {
-    console.log('Upgrade to plan:', planId);
-    // TODO: 跳转支付流程或弹窗确认
+    if (planId === currentPlanId) return;
+    upgradeMutation.mutate(planId);
   };
 
   if (isLoading) {
@@ -37,7 +63,7 @@ export default function PlansPage() {
     );
   }
 
-  const plans = plansData?.data || [];
+  const plans = plansData || [];
 
   if (plans.length === 0) {
     return (
@@ -69,8 +95,9 @@ export default function PlansPage() {
               quota_unit: plan.quota_unit,
               features: plan.features,
             }}
-            isCurrent={plan.id === CURRENT_PLAN_ID}
+            isCurrent={plan.id === currentPlanId}
             onUpgrade={handleUpgrade}
+            isLoading={upgradeMutation.isPending}
           />
         ))}
       </div>

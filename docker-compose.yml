@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: keypilot
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: keypilot
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -14,54 +12,68 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - perf_net
 
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--no-auth-warning", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - perf_net
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://api_farm:secret@postgres:5432/api_farm
-      REDIS_URL: redis://redis:6379/0
-      JWT_SECRET_KEY: perf_test_secret_key
-      ENCRYPTION_KEY: 3Xx9HcWx7pP2vBqZQ5kLrN8yJtMfGdSs  # fernet key
+      DATABASE_URL: postgresql://keypilot:${POSTGRES_PASSWORD}@postgres:5432/keypilot
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      # ==== 国内服务器必配：设置代理访问 OpenAI ====
+      HTTPS_PROXY: http://host.docker.internal:7890
+      HTTP_PROXY: http://host.docker.internal:7890
       DEBUG: "false"
       RATE_LIMIT_ENABLED: "true"
       KEY_FAILURE_THRESHOLD: 3
       KEY_RECOVERY_TIMEOUT_SECONDS: 60
-    ports:
-      - "8000:8000"
+      # 支付宝沙箱（按需修改）
+      ALIPAY_APP_ID: ""
+      ALIPAY_APP_PRIVATE_KEY: ""
+      ALIPAY_PUBLIC_KEY: ""
+      ALIPAY_DEBUG: "true"
+      ALIPAY_NOTIFY_URL: ""
+      ALIPAY_RETURN_URL: ""
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - perf_net
 
-  locust:
-    image: locustio/locust:latest
-    volumes:
-      - ./locustfile.py:/mnt/locust/locustfile.py
-    environment:
-      LOCUST_HOST: http://app:8000
-      LOCUST_USERS: 50
-      LOCUST_SPAWN_RATE: 5
-      LOCUST_RUN_TIME: 120s
+  nginx:
+    image: nginx:1.24-alpine
     ports:
-      - "8089:8089"
+      - "80:80"
+      - "443:443"   # 添加这一行
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl          # 这一行必须存在
+      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
       - app
+    restart: unless-stopped
     networks:
       - perf_net
 

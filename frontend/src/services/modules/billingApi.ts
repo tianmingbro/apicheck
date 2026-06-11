@@ -17,10 +17,10 @@ export const billingApi = {
   /**
    * 获取所有套餐列表
    */
-  getPlans: () => apiClient.get<Plan[]>('/plans'),
+  getPlans: () => apiClient.get<Plan[]>('/api/plans'),
 
   /**
    * 获取当前用户订阅的套餐（可选）
    */
-  getCurrentPlan: () => apiClient.get<Plan>('/plans/current'),
+  getCurrentPlan: () => apiClient.get<Plan>('/api/plans/current'),
 };

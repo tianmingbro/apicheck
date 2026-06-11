@@ -10,8 +10,8 @@ class CallLog(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     request_id: Mapped[str] = mapped_column(String(36), unique=True, index=True, nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True, nullable=False)
-    api_key_id: Mapped[int] = mapped_column(Integer, ForeignKey("api_keys.id"), nullable=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    api_key_id: Mapped[int] = mapped_column(Integer, ForeignKey("api_keys.id", ondelete="SET NULL"), nullable=True)
     model: Mapped[str] = mapped_column(String(100), nullable=False)
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
@@ -23,9 +23,6 @@ class CallLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
     __table_args__ = (
-        Index('idx_call_logs_user_id', 'user_id'),
-        Index('idx_call_logs_created_at', 'created_at'),
-        Index('idx_call_logs_status_code', 'status_code'),
         Index('idx_call_logs_model', 'model'),
         Index('idx_call_logs_user_created', 'user_id', 'created_at'),
     )

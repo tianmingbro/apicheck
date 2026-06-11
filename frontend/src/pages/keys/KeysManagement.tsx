@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useKeys, useAddKey, useDeleteKey } from '@/hooks/useKeys';
-import KeyListTable, { type APIKey } from './KeyListTable';
+import KeyListTable from './KeyListTable';
+import type { APIKey } from '@/api/types/api.types';
 
 // 定义添加表单的数据类型
 interface AddKeyFormData {
@@ -9,7 +10,7 @@ interface AddKeyFormData {
 }
 
 export default function KeysManagement() {
-  const { data: keys, refetch } = useKeys();
+  const { data: keys, isLoading, isError, error, refetch } = useKeys();
   const addKey = useAddKey();
   const deleteKey = useDeleteKey();
 
@@ -105,11 +106,22 @@ export default function KeysManagement() {
       </div>
 
       {/* Key 列表表格（使用可复用组件，含删除确认弹窗） */}
-      <KeyListTable
-        keys={keys || []}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {isLoading ? (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow p-8 text-center text-neutral-500">
+          加载中...
+        </div>
+      ) : isError ? (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow p-8 text-center">
+          <p className="text-danger mb-2">加载失败: {(error as Error)?.message || '未知错误'}</p>
+          <button onClick={() => refetch()} className="text-primary hover:underline text-sm">点击重试</button>
+        </div>
+      ) : (
+        <KeyListTable
+          keys={keys || []}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }

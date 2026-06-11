@@ -6,8 +6,22 @@
 **__pycache__
 **.pytest_cache
 
-# 虚拟环境
-venv/
-.venv/
-env/
-.env.prod
+# 环境变量文件
+.env
+.env.*
+!.env.example
+!.env.test
+
+# 本地持久化文件（如果项目生成这些文件）
+keys.json
+users.json
+*.db
+*.log
+
+# Python 缓存
+__pycache__/
+*.pyc
+.pytest_cache/
+.coveragenginx/ssl/
+*.key
+*.pem

@@ -1,11 +1,12 @@
 // src/components/layout/Sidebar.tsx
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Key, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Key,
+  CreditCard,
+  Shield,
   LogOut,
-  X 
+  X,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -14,14 +15,18 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const navItems = [
-  { path: '/dashboard', label: '仪表盘', icon: LayoutDashboard },
-  { path: '/keys', label: 'API Keys', icon: Key },
-  { path: '/billing', label: '账单与套餐', icon: CreditCard },
-];
-
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+
+  const isAdmin = user?.role === 'admin';
+
+  const navItems = [
+    { path: '/dashboard', label: '仪表盘', icon: LayoutDashboard },
+    { path: '/keys', label: 'API Keys', icon: Key },
+    { path: '/billing', label: '账单与套餐', icon: CreditCard },
+    ...(isAdmin ? [{ path: '/admin', label: '管理后台', icon: Shield }] : []),
+  ];
 
   const handleLogout = async () => {
     await logout();
@@ -51,7 +56,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       >
         {/* 头部 Logo 和关闭按钮 */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
-          <h1 className="text-xl font-bold text-primary">API Farm</h1>
+          <h1 className="text-xl font-bold text-primary">KEYPILOT</h1>
           <button
             onClick={onClose}
             className="lg:hidden p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700"

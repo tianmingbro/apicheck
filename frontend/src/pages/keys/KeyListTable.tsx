@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { Edit, Trash2, X, AlertTriangle } from 'lucide-react';
-
-// 定义 API Key 数据类型（与后端对齐）
-export interface APIKey {
-  id: number;
-  key: string;           // 脱敏后的 key（如 "sk-abc...xyz"）
-  is_enabled: boolean;
-  last_used_at: string | null;
-  created_at: string;
-}
+import type { APIKey } from '@/api/types/api.types';
 
 interface KeyListTableProps {
   keys: APIKey[];

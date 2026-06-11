@@ -1,11 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import DashboardLayout from './layouts/DashboardLayout';
-import Login from './pages/auth/Login';          // 使用我们之前实现的 Login 容器组件
+import DashboardLayout from './components/layout/DashboardLayout';
+import PrivateRoute from './components/common/PrivateRoute';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import KeysManagement from './pages/keys/KeysManagement';
 import Usage from './pages/Usage';
-import PrivateRoute from './components/common/PrivateRoute'; // 新增
+import Billing from './pages/billing/Billing';
+import ChatTest from './pages/ChatTest';
 
 const queryClient = new QueryClient();
 
@@ -14,18 +17,24 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* 公开路由 */}
+          {/* Public routes */}
           <Route path="/login" element={<Login />} />
-          
-          {/* 私有路由（需要登录） */}
+          <Route path="/register" element={<Register />} />
+
+          {/* Protected routes */}
           <Route element={<PrivateRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/keys" element={<KeysManagement />} />
               <Route path="/usage" element={<Usage />} />
+              <Route path="/billing" element={<Billing />} />
+              <Route path="/chat-test" element={<ChatTest />} />
             </Route>
           </Route>
+
+          {/* Catch-all → login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

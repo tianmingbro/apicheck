@@ -33,7 +33,7 @@ interface LogsResponse {
 
 // ========== API 调用函数 ==========
 const fetchLogs = async (params: LogsQueryParams): Promise<LogsResponse> => {
-  const response = await apiClient.get<LogsResponse>('/admin/logs', { params });
+  const response = await apiClient.get<LogsResponse>('/api/admin/logs', { params });
   return response.data;
 };
 

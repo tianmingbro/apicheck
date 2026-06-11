@@ -16,7 +16,6 @@ const PlansPage = lazy(() => import('@/pages/billing/PlansPage'));
 // 管理员页面（懒加载）
 const UserManagement = lazy(() => import('@/pages/admin/UserManagement'));
 const KeyManagement = lazy(() => import('@/pages/admin/KeyManagement'));
-const LogAudit = lazy(() => import('@/pages/admin/LogAudit'));
 
 // 统一懒加载包装器
 const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) => (
@@ -62,7 +61,6 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/admin/users" replace /> },
       { path: 'users', element: withSuspense(UserManagement) },
       { path: 'keys', element: withSuspense(KeyManagement) },
-      { path: 'logs', element: withSuspense(LogAudit) },
       { path: 'logs', element: <GlobalLogsPage /> }
     ],
   },

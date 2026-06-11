@@ -1,17 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '@/api/endpoints/auth';
+import { authApi } from '@/services/modules/authApi';
 import { useAuthStore } from '@/stores/authStore';
+import type { LoginDto } from '@/types/api.types';
 
-export const useLogin = () => {
-  const setToken = useAuthStore((s) => s.setToken);
+export const useLoginMutation = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: ({ username, password }: { username: string; password: string }) =>
-      authApi.login(username, password),
-    onSuccess: (data) => {
-      setToken(data.data.access_token);
+    mutationFn: (credentials: LoginDto) => authApi.login(credentials),
+    onSuccess: () => {
       navigate('/dashboard');
     },
   });

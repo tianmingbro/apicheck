@@ -1,10 +1,9 @@
 # app/core/load_balancer.py
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy.orm import Session
 from app.models.apikey import APIKey
 
 class LoadBalancer:
-    def __init__(self, db: AsyncSession, strategy: str = "round_robin"):
+    def __init__(self, db: Session, strategy: str = "round_robin"):
         self.db = db
         self.strategy = strategy
         self._index = 0   # 关键：轮询计数器

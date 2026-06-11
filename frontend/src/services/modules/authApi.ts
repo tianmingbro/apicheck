@@ -1,27 +1,24 @@
-// src/services/modules/authApi.ts
 import apiClient from '../apiClient';
 import type { LoginDto, AuthResponse, User } from '@/types/api.types';
 
 export const authApi = {
-  /**
-   * 登录
-   * @param data - 登录凭证（username/password）
-   * @returns Promise<AuthResponse>
-   */
-  login: (data: LoginDto) =>
-    apiClient.post<AuthResponse>('/auth/login', data, {
+  /** Login with username + password (backend expects form-urlencoded) */
+  login: (data: LoginDto) => {
+    const params = new URLSearchParams();
+    params.append('username', data.username);
+    params.append('password', data.password);
+    return apiClient.post<AuthResponse>('/api/auth/login', params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      transformRequest: [(data) => new URLSearchParams(data).toString()],
-    }),
+    });
+  },
 
-  /**
-   * 获取当前用户信息（示例接口，根据实际后端调整）
-   * @returns Promise<User>
-   */
-  getCurrentUser: () => apiClient.get<User>('/auth/me'),
+  /** Register a new user */
+  register: (data: { username: string; password: string }) =>
+    apiClient.post<AuthResponse>('/api/auth/register', data),
 
-  /**
-   * 登出（可选，通知后端失效 token）
-   */
-  logout: () => apiClient.post('/auth/logout'),
+  /** Get current user info */
+  getCurrentUser: () => apiClient.get<User>('/api/auth/me'),
+
+  /** Logout (notify backend, best-effort) */
+  logout: () => apiClient.post('/api/auth/logout'),
 };

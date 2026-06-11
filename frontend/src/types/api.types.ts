@@ -4,7 +4,7 @@ export interface User {
   username: string;
   email?: string;
   role: 'user' | 'admin';
-  createdAt: string;
+  created_at: string;
 }
 
 export interface LoginDto {
@@ -15,6 +15,22 @@ export interface LoginDto {
 export interface AuthResponse {
   access_token: string;
   token_type: string;
+}
+
+export interface DailyBreakdown {
+  date: string;
+  calls: number;
+  tokens: number;
+}
+
+export interface UsageStats {
+  total_calls: number;
+  total_tokens: number;
+  quota_limit: number;
+  quota_used: number;
+  extra_tokens: number;
+  remaining_quota: number;
+  daily: DailyBreakdown[];
 }
 
 export interface CallLog {

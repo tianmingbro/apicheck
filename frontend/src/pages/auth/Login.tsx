@@ -1,9 +1,14 @@
-// src/pages/auth/Login.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import { useAuthStore } from '@/stores/authStore';
 import { AxiosError } from 'axios';
+
+interface LoginFormData {
+  username: string;
+  password: string;
+  rememberMe: boolean;
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,17 +16,17 @@ export default function Login() {
   const isLoading = useAuthStore((state) => state.isLoading);
   const [serverError, setServerError] = useState('');
 
-  const handleLogin = async (data: { email: string; password: string; rememberMe: boolean }) => {
+  const handleLogin = async (data: LoginFormData) => {
     setServerError('');
     try {
-      await login({ username: data.email, password: data.password });
-      // 登录成功，跳转到仪表盘
+      await login({ username: data.username, password: data.password });
       navigate('/dashboard');
-    } catch (err ) {
-        if (err instanceof AxiosError) {
-    setServerError(err.response?.data?.detail || '登录失败，请检查邮箱和密码');
-  } else {
-    setServerError('登录失败，请稍后再试');}
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setServerError(err.response?.data?.detail || '登录失败，请检查用户名和密码');
+      } else {
+        setServerError('登录失败，请稍后再试');
+      }
     }
   };
 
